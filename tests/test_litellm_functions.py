@@ -6,7 +6,7 @@ from langchain_community.tools import DuckDuckGoSearchResults, PubmedQueryRun
 from langchain_core.messages import AIMessage
 from langchain_core.pydantic_v1 import BaseModel, Field
 
-from src.tool_calling_llm_klcoder.tool_calling_llm import (ToolCallingLLM, convert_to_tool_definition)
+from src.tool_calling_llm.tool_calling_llm import (ToolCallingLLM, convert_to_tool_definition)
 
 
 class Joke(BaseModel):

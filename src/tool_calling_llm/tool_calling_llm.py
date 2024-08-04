@@ -406,10 +406,15 @@ class ToolCallingLLM(BaseChatModel, ABC):
             kwargs: Dict[str, Any],
     ) -> Tuple[BaseMessage, List]:
         functions = kwargs.get("tools", kwargs.get("functions", []))
-        if len(functions) > 0:
-            f0 = functions[0]
-            if "name" not in f0.keys() and "function" in f0.keys() and "name" in f0["function"].keys():
-                functions = [fn["function"] for fn in functions]
+        functions = [
+            fn["function"]
+            if (not _is_pydantic_class(fn) and
+                not _is_pydantic_object(fn) and
+                "name" not in fn.keys() and
+                "function" in fn.keys() and
+                "name" in fn["function"].keys())
+            else fn
+            for fn in functions]
         if "functions" in kwargs:
             del kwargs["functions"]
         if "function_call" in kwargs:
