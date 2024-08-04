@@ -1,0 +1,38 @@
+[build-system]
+requires = ["setuptools>=72.1.0"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "tool_calling_llm"
+version = "0.0.1"
+authors = [
+    { name = "Karim Lalani", email = "jimmy00784@gmail.com" }
+]
+description = "Convert any LangChain Chat Model into a Tool Calling LLM"
+readme = "README.md"
+requires-python = ">=3.9"
+classifiers = [
+    "Programming Language :: Python :: 3",
+    "License :: OSI Approved :: MIT License",
+    "Operating System :: OS Independent",
+]
+dependencies = [
+    "langchain>=0.2.12"
+]
+
+[project.urls]
+Homepage = "https://github.com/lalanikarim/tool_calling_llm"
+Issues = "https://github.com/lalanikarim/tool_calling_llm/issues"
+
+[project.optional-dependencies]
+test = [
+    "pytest",
+    "langchain-community>=0.2.11",
+    "langchain-ollama",
+    "litellm",
+    "xmltodict",
+    "duckduckgo_search"
+]
+
+[tool.pytest.ini_options]
+pythonpath = ["."]
