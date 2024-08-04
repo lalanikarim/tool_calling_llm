@@ -4,7 +4,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "tool_calling_llm"
-version = "0.0.1"
+version = "0.0.6"
 authors = [
     { name = "Karim Lalani", email = "jimmy00784@gmail.com" }
 ]

@@ -10,7 +10,7 @@ from langchain_core.messages import AIMessage
 from langchain_core.pydantic_v1 import BaseModel, Field
 from langchain_ollama import ChatOllama
 
-from src.tool_calling_llm.tool_calling_llm import (ToolCallingLLM, convert_to_tool_definition)
+from src.tool_calling_llm import (ToolCallingLLM, convert_to_tool_definition)
 
 
 class OllamaFunctions(ToolCallingLLM, ChatOllama):  # type: ignore[misc]
