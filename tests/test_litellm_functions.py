@@ -5,8 +5,9 @@ from langchain_community.chat_models import ChatLiteLLM
 from langchain_community.tools import DuckDuckGoSearchResults, PubmedQueryRun
 from langchain_core.messages import AIMessage
 from langchain_core.pydantic_v1 import BaseModel, Field
+from langchain_core.utils.function_calling import convert_to_openai_tool
 
-from src.tool_calling_llm.tool_calling_llm import (ToolCallingLLM, convert_to_tool_definition)
+from src.tool_calling_llm.tool_calling_llm import ToolCallingLLM
 
 
 class Joke(BaseModel):
@@ -18,7 +19,7 @@ class LiteLLMFunctions(ToolCallingLLM, ChatLiteLLM):  # type: ignore[misc]
     """Function chat model that uses ChatLiteLLM."""
 
     def __init__(self, **kwargs: Any) -> None:
-        super().__init__(**kwargs)
+        super().__init__(model_kwargs={"drop_params":True}, **kwargs)
 
     @property
     def _llm_type(self) -> str:
@@ -74,7 +75,7 @@ class TestLiteLLMFunctions(unittest.TestCase):
         model = base_model.bind_tools(
             tools=[PubmedQueryRun(), DuckDuckGoSearchResults(num_results=2)]
         )
-        res = model.invoke("What causes lung cancer?")
+        res = model.invoke("Look up what causes lung cancer in pub_med")
         self.assertIsInstance(res, AIMessage)
         res = AIMessage(**res.__dict__)
         tool_calls = res.tool_calls
@@ -130,7 +131,7 @@ class TestLiteLLMFunctions(unittest.TestCase):
 
     def test_litellm_structured_output_with_json(self) -> None:
         model = LiteLLMFunctions(model="ollama/phi3")
-        joke_schema = convert_to_tool_definition(Joke)
+        joke_schema = convert_to_openai_tool(Joke)
         structured_llm = model.with_structured_output(joke_schema, include_raw=False)
 
         res = structured_llm.invoke("Tell me a joke about cats")

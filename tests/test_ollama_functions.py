@@ -9,8 +9,9 @@ from langchain_community.tools.pubmed.tool import PubmedQueryRun
 from langchain_core.messages import AIMessage
 from langchain_core.pydantic_v1 import BaseModel, Field
 from langchain_ollama import ChatOllama
+from langchain_core.utils.function_calling import convert_to_openai_tool
 
-from src.tool_calling_llm import (ToolCallingLLM, convert_to_tool_definition)
+from src.tool_calling_llm import ToolCallingLLM
 
 
 class OllamaFunctions(ToolCallingLLM, ChatOllama):  # type: ignore[misc]
@@ -134,7 +135,7 @@ class TestOllamaFunctions(unittest.TestCase):
 
     def test_ollama_structured_output_with_json(self) -> None:
         model = OllamaFunctions(model="phi3")
-        joke_schema = convert_to_tool_definition(Joke)
+        joke_schema = convert_to_openai_tool(Joke)
         structured_llm = model.with_structured_output(joke_schema, include_raw=False)
 
         res = structured_llm.invoke("Tell me a joke about cats")
