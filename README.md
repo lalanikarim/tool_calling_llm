@@ -5,7 +5,7 @@ Tool Calling LLM is a python mixin that lets you add tool calling capabilities e
 
 With ToolCallingLLM you also get access to the following functions:
 1. `.bind_tools()` allows you to bind tool definitions with a llm.
-2. `.with_structured_output()` allows you to return structured data from your model. This is not being provided by LangChain's `BaseChatModel` class.
+2. `.with_structured_output()` allows you to return structured data from your model. This is now being provided by LangChain's `BaseChatModel` class.
 
 At this time, ToolCallingLLM has been tested to work with ChatOllama, ChatNVIDIA, and ChatLiteLLM with Ollama provider.
 
