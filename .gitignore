@@ -1,3 +1,5 @@
 .idea/**
 **/*.egg-info/**
 dist/**
+__pycache__
+.conda

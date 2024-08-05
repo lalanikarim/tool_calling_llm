@@ -16,6 +16,7 @@ langchain = ">=0.2.12"
 
 [tool.poetry.group.test.dependencies]
 pytest = "*"
+pytest-asyncio = "*"
 langchain-community = ">=0.2.11"
 langchain-ollama = "*"
 litellm = "*"
