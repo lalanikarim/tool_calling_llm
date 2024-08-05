@@ -7,7 +7,7 @@ from langchain_core.messages import AIMessage
 from langchain_core.pydantic_v1 import BaseModel, Field
 from langchain_core.utils.function_calling import convert_to_openai_tool
 
-from src.tool_calling_llm.tool_calling_llm import ToolCallingLLM
+from tool_calling_llm.tool_calling_llm import ToolCallingLLM
 
 
 class Joke(BaseModel):
