@@ -1,6 +1,7 @@
 import unittest
 from typing import Any
 
+import pytest
 from langchain_community.chat_models import ChatLiteLLM
 from langchain_community.tools import DuckDuckGoSearchResults, PubmedQueryRun
 from langchain_core.messages import AIMessage
@@ -26,16 +27,20 @@ class LiteLLMFunctions(ToolCallingLLM, ChatLiteLLM):  # type: ignore[misc]
         return "litellm_functions"
 
 
+@pytest.fixture(scope="function")
+def base_model(request):
+    request.cls.base_model = LiteLLMFunctions(model="ollama/phi3")
+
+
+@pytest.mark.usefixtures("base_model")
 class TestLiteLLMFunctions(unittest.TestCase):
     """
     Test LiteLLMFunctions
     """
 
     def test_default_litellm_functions(self) -> None:
-        base_model = LiteLLMFunctions(model="ollama/phi3")
-
         # bind functions
-        model = base_model.bind_tools(
+        model = self.base_model.bind_tools(
             tools=[
                 {
                     "name": "get_current_weather",
@@ -71,8 +76,7 @@ class TestLiteLLMFunctions(unittest.TestCase):
         self.assertEqual("get_current_weather", tool_call.get("name"))
 
     def test_litellm_functions_tools(self) -> None:
-        base_model = LiteLLMFunctions(model="ollama/phi3")
-        model = base_model.bind_tools(
+        model = self.base_model.bind_tools(
             tools=[PubmedQueryRun(), DuckDuckGoSearchResults(num_results=2)]
         )
         res = model.invoke("Look up what causes lung cancer in pub_med")
@@ -85,10 +89,8 @@ class TestLiteLLMFunctions(unittest.TestCase):
         self.assertEqual("pub_med", tool_call.get("name"))
 
     def test_default_litellm_functions_default_response(self) -> None:
-        base_model = LiteLLMFunctions(model="ollama/phi3")
-
         # bind functions
-        model = base_model.bind_tools(
+        model = self.base_model.bind_tools(
             tools=[
                 {
                     "name": "get_current_weather",
@@ -123,24 +125,21 @@ class TestLiteLLMFunctions(unittest.TestCase):
             self.assertEqual("__conversational_response", tool_call.get("name"))
 
     def test_litellm_structured_output(self) -> None:
-        model = LiteLLMFunctions(model="ollama/phi3")
-        structured_llm = model.with_structured_output(Joke, include_raw=False)
+        structured_llm = self.base_model.with_structured_output(Joke, include_raw=False)
 
         res = structured_llm.invoke("Tell me a joke about cats")
         assert isinstance(res, Joke)
 
     def test_litellm_structured_output_with_json(self) -> None:
-        model = LiteLLMFunctions(model="ollama/phi3")
         joke_schema = convert_to_openai_tool(Joke)
-        structured_llm = model.with_structured_output(joke_schema, include_raw=False)
+        structured_llm = self.base_model.with_structured_output(joke_schema, include_raw=False)
 
         res = structured_llm.invoke("Tell me a joke about cats")
         assert "setup" in res
         assert "punchline" in res
 
     def test_litellm_structured_output_raw(self) -> None:
-        model = LiteLLMFunctions(model="ollama/phi3")
-        structured_llm = model.with_structured_output(Joke, include_raw=True)
+        structured_llm = self.base_model.with_structured_output(Joke, include_raw=True)
 
         res = structured_llm.invoke("Tell me a joke about cars")
         assert "raw" in res

@@ -30,16 +30,20 @@ class Joke(BaseModel):
     punchline: str = Field(description="The punchline to the joke")
 
 
+@pytest.fixture(scope="function")
+def base_model(request):
+    request.cls.base_model = OllamaFunctions(model="phi3")
+
+
+@pytest.mark.usefixtures("base_model")
 class TestOllamaFunctions(unittest.TestCase):
     """
     Test OllamaFunctions
     """
 
     def test_default_ollama_functions(self) -> None:
-        base_model = OllamaFunctions(model="phi3", format="json")
-
         # bind functions
-        model = base_model.bind_tools(
+        model = self.base_model.bind_tools(
             tools=[
                 {
                     "name": "get_current_weather",
@@ -75,8 +79,7 @@ class TestOllamaFunctions(unittest.TestCase):
         self.assertEqual("get_current_weather", tool_call.get("name"))
 
     def test_ollama_functions_tools(self) -> None:
-        base_model = OllamaFunctions(model="phi3", format="json")
-        model = base_model.bind_tools(
+        model = self.base_model.bind_tools(
             tools=[PubmedQueryRun(), DuckDuckGoSearchResults(max_results=2)]  # type: ignore[call-arg]
         )
         res = model.invoke("What causes lung cancer?")
@@ -89,10 +92,8 @@ class TestOllamaFunctions(unittest.TestCase):
         self.assertEqual("pub_med", tool_call.get("name"))
 
     def test_default_ollama_functions_default_response(self) -> None:
-        base_model = OllamaFunctions(model="phi3", format="json")
-
         # bind functions
-        model = base_model.bind_tools(
+        model = self.base_model.bind_tools(
             tools=[
                 {
                     "name": "get_current_weather",
@@ -127,24 +128,21 @@ class TestOllamaFunctions(unittest.TestCase):
             self.assertEqual("__conversational_response", tool_call.get("name"))
 
     def test_ollama_structured_output(self) -> None:
-        model = OllamaFunctions(model="phi3")
-        structured_llm = model.with_structured_output(Joke, include_raw=False)
+        structured_llm = self.base_model.with_structured_output(Joke, include_raw=False)
 
         res = structured_llm.invoke("Tell me a joke about cats")
         assert isinstance(res, Joke)
 
     def test_ollama_structured_output_with_json(self) -> None:
-        model = OllamaFunctions(model="phi3")
         joke_schema = convert_to_openai_tool(Joke)
-        structured_llm = model.with_structured_output(joke_schema, include_raw=False)
+        structured_llm = self.base_model.with_structured_output(joke_schema, include_raw=False)
 
         res = structured_llm.invoke("Tell me a joke about cats")
         assert "setup" in res
         assert "punchline" in res
 
     def test_ollama_structured_output_raw(self) -> None:
-        model = OllamaFunctions(model="phi3")
-        structured_llm = model.with_structured_output(Joke, include_raw=True)
+        structured_llm = self.base_model.with_structured_output(Joke, include_raw=True)
 
         res = structured_llm.invoke("Tell me a joke about cars")
         assert isinstance(res, dict)
@@ -154,19 +152,18 @@ class TestOllamaFunctions(unittest.TestCase):
         assert isinstance(res["parsed"], Joke)
 
 
+@pytest.mark.usefixtures("base_model")
 class TestOllamaFunctionsAsync(unittest.IsolatedAsyncioTestCase):
     @pytest.mark.asyncio
     async def test_ollama_structured_output_async(self) -> None:
-        model = OllamaFunctions(model="phi3")
-        structured_llm = model.with_structured_output(Joke, include_raw=False)
+        structured_llm = self.base_model.with_structured_output(Joke, include_raw=False)
 
         res = await structured_llm.ainvoke("Tell me a joke about cats")
         assert isinstance(res, Joke)
 
     @pytest.mark.asyncio
     async def test_ollama_structured_output_astream(self) -> None:
-        model = OllamaFunctions(model="phi3")
-        structured_llm = model.with_structured_output(Joke, include_raw=False)
+        structured_llm = self.base_model.with_structured_output(Joke, include_raw=False)
 
         async for output in structured_llm.astream("Tell me a joke about cats"):
             assert isinstance(output, Joke)

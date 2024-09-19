@@ -1,6 +1,8 @@
+import re
 import json
 import uuid
 from abc import ABC
+from shutil import Error
 from typing import (
     Any,
     AsyncIterator,
@@ -92,21 +94,30 @@ class _AllReturnType(TypedDict):
     parsed: Optional[_DictOrPydantic]
     parsing_error: Optional[BaseException]
 
+def RawJSONDecoder(index):
+    class _RawJSONDecoder(json.JSONDecoder):
+        end = None
+
+        def decode(self, s, *_):
+            data, self.__class__.end = self.raw_decode(s, index)
+            return data
+    return _RawJSONDecoder
+
+def extract_json(s, index=0):
+    while (index := s.find('{', index)) != -1:
+        try:
+            yield json.loads(s, cls=(decoder := RawJSONDecoder(index)))
+            index = decoder.end
+        except json.JSONDecodeError:
+            index += 1
 
 def parse_json_garbage(s: str) -> Any:
-    """
-    Parse a JSON-like string and return it as a Python object.
-    Parsing begins at the first occurrence of "{" or "[".
-    """
-    s = s[next(idx for idx, c in enumerate(s) if c in "{["):]
-    try:
-        response = json.loads(s)
-        return response
-    except (json.JSONDecodeError, ValueError) as e:
-        if isinstance(e, json.JSONDecodeError):
-            response = json.loads(s[: e.pos])
-            return response
-        raise e
+    # Find the first occurrence of a JSON opening brace or bracket
+    candidates = list(extract_json(s))
+    if len(candidates) >= 1:
+        return candidates[0]
+
+    raise ValueError("Not a valid JSON string")
 
 
 def parse_response(message: BaseMessage) -> str:
@@ -291,14 +302,14 @@ class ToolCallingLLM(BaseChatModel, ABC):
         except json.JSONDecodeError:
             try:
                 parsed_chat_result = parse_json_garbage(chat_generation_content)
-            except json.JSONDecodeError:
-                raise ValueError(
-                    f"'{self.model}' did not respond with valid JSON.\n"  # type: ignore[attr-defined]
-                    "Please try again.\n"
-                    f"Response: {chat_generation_content}"
-                )
+            except Exception:
+                return AIMessage(content=chat_generation_content)
+
         called_tool_name = (
-            parsed_chat_result["tool"] if "tool" in parsed_chat_result else None
+            parsed_chat_result["tool"]
+            if "tool" in parsed_chat_result
+            else parsed_chat_result["name"] if "name" in parsed_chat_result
+            else None
         )
         called_tool = next(
             (fn for fn in functions if fn["function"]["name"] == called_tool_name), None
@@ -306,12 +317,18 @@ class ToolCallingLLM(BaseChatModel, ABC):
         if (
                 called_tool is None
                 or called_tool["function"]["name"] == DEFAULT_RESPONSE_FUNCTION["function"]["name"]
+                or called_tool["function"]["name"] == DEFAULT_RESPONSE_FUNCTION["function"]["name"][2:]
         ):
             if (
-                    "tool_input" in parsed_chat_result
-                    and "response" in parsed_chat_result["tool_input"]
+                "tool_input" in parsed_chat_result
+                and "response" in parsed_chat_result["tool_input"]
             ):
                 response = parsed_chat_result["tool_input"]["response"]
+            elif (
+                "parameters" in parsed_chat_result
+                and "response" in parsed_chat_result["parameters"]
+            ):
+                response = parsed_chat_result["parameters"]["response"]
             elif "response" in parsed_chat_result:
                 response = parsed_chat_result["response"]
             else:
@@ -322,8 +339,8 @@ class ToolCallingLLM(BaseChatModel, ABC):
             return AIMessage(content=response)
 
         called_tool_arguments = (
-            parsed_chat_result["tool_input"]
-            if "tool_input" in parsed_chat_result
+            parsed_chat_result["tool_input"] if "tool_input" in parsed_chat_result
+            else parsed_chat_result["parameters"] if "parameters" in parsed_chat_result
             else {}
         )
 

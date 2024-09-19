@@ -1,6 +1,6 @@
 [tool.poetry]
 name = "tool_calling_llm"
-version = "0.1.0"
+version = "0.1.2"
 description = "Convert any LangChain Chat Model into a Tool Calling LLM"
 authors = ["Karim Lalani <jimmy00784@gmail.com>"]
 readme = "README.md"
