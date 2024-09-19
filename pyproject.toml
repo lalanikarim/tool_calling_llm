@@ -1,6 +1,6 @@
 [tool.poetry]
 name = "tool_calling_llm"
-version = "0.0.9"
+version = "0.1.0"
 description = "Convert any LangChain Chat Model into a Tool Calling LLM"
 authors = ["Karim Lalani <jimmy00784@gmail.com>"]
 readme = "README.md"
@@ -12,13 +12,13 @@ classifiers = [
 
 [tool.poetry.dependencies]
 python = ">=3.9,<4.0"
-langchain = ">=0.2.12"
+langchain = ">=0.3,<0.4"
 
 [tool.poetry.group.test.dependencies]
 pytest = "*"
 pytest-asyncio = "*"
-langchain-community = ">=0.2.11"
-langchain-ollama = "*"
+langchain-community = ">=0.3,<0.4"
+langchain-ollama = ">=0.2"
 litellm = "*"
 xmltodict = "*"
 duckduckgo_search = "*"

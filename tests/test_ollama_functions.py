@@ -7,7 +7,7 @@ import pytest
 from langchain_community.tools import DuckDuckGoSearchResults
 from langchain_community.tools.pubmed.tool import PubmedQueryRun
 from langchain_core.messages import AIMessage
-from langchain_core.pydantic_v1 import BaseModel, Field
+from pydantic import BaseModel, Field
 from langchain_ollama import ChatOllama
 from langchain_core.utils.function_calling import convert_to_openai_tool
 
